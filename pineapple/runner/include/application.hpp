@@ -3,6 +3,8 @@
 #pragma once
 
 #include "batch.hpp"
+#include "object.h"
+#include "collision_detection.h"
 
 namespace runner
 {
@@ -40,6 +42,13 @@ namespace runner
       sf::Clock        m_clock;
       sf::Time         m_deltatime;
       sf::Vector2f     m_mouse_position; 
+      sf::Vector2u     center;
+      object           circle;
+      object           static_circle; //Spawn at random position for more fun
+      object           aabb;
+      object           static_aabb;//Spawn at random position for more fun
+      object           static_line; //Draw the line at random positions for more fun
+      collision_detection detector;
       sf::Font         font;
       sf::Text         text;
       State            state;

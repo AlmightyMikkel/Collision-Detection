@@ -102,13 +102,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="collision_detection.cpp" />
+    <ClCompile Include="object.cpp" />
     <ClCompile Include="src\application.cpp" />
     <ClCompile Include="src\batch.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\collision_detection.h" />
     <ClInclude Include="include\application.hpp" />
     <ClInclude Include="include\batch.hpp" />
+    <ClInclude Include="include\object.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

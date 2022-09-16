@@ -14,12 +14,35 @@ namespace runner
             return;
         }
 
+        center = { m_window.getSize().x / 2, m_window.getSize().y / 2 };
+
         text.setFont(font);
         text.setString("TEST");
-        text.setCharacterSize(500);
+        text.setCharacterSize(24);
         text.setFillColor(sf::Color::Green);
         text.setStyle(sf::Text::Bold);
-        text.setPosition(200,200);
+        text.setPosition(400,50);
+
+        circle.set_size(15, 0);
+        circle.set_color(sf::Color::Red);
+        circle.set_sections(12);
+        circle.tag = tag::circle;
+
+        aabb.set_size(20, 20);
+        aabb.set_color(sf::Color::Red);
+        aabb.tag = tag::aabb;
+
+        static_circle.set_color(sf::Color::Red);
+        static_circle.set_sections(30);
+        static_circle.tag = tag::circle;
+
+        static_aabb.set_color(sf::Color::Red);
+        static_aabb.tag = tag::aabb;
+
+        static_line.set_color(sf::Color::Red);
+        static_line.tag = tag::line;
+
+
         if (!m_window.isOpen() || !enter()) {
             return;
         }
@@ -57,6 +80,8 @@ namespace runner
 
     bool Application::enter()
     {
+
+
         return true;
     }
 
@@ -83,36 +108,82 @@ namespace runner
    {
       m_batch.clear();
       { 
-          sf::Vector2f size = { 15,15 };
-          sf::FloatRect rect{ m_mouse_position - sf::Vector2f(size.x / 2, size.y / 2), size};
-          sf::Color rectColor{ 255,0,0,255 };
+
           switch (state)
           {
           case State::CirclevsCircle:
               text.setString("Circle vs Circle");
-              m_batch.draw_circle(m_mouse_position, 15.0f, 12, 1.0f, sf::Color::Green);
+
+              circle.set_position(m_mouse_position);
+              m_batch.draw_circle(circle.get_position(), circle.get_size().x, circle.get_sections(), circle.get_color());
+              m_batch.draw_circle(static_circle.get_position(), static_circle.get_size().x, static_circle.get_sections(), static_circle.get_color());
+              if (detector.collision(circle, static_circle)) {
+                  circle.set_color(sf::Color::Green);
+                  static_circle.set_color(sf::Color::Green);
+              }
+              else {
+                  circle.set_color(sf::Color::Red);
+                  static_circle.set_color(sf::Color::Red);
+              }
               break;
           case State::CirclevsAABB:
               text.setString("Circle vs AABB");
-              m_batch.draw_circle(m_mouse_position, 15.0f, 12, 1.0f, sf::Color::Blue);
+ 
+
+
+
+              m_batch.draw_circle(m_mouse_position, circle.get_size().x, circle.get_sections(), circle.get_color());
+              m_batch.draw_rectangle(static_aabb.get_rect(), static_aabb.get_color());
+              if (detector.collision(circle, static_aabb)) {
+                  circle.set_color(sf::Color::Green);
+                  static_aabb.set_color(sf::Color::Green);
+              }
+              else {
+                  circle.set_color(sf::Color::Red);
+                  static_aabb.set_color(sf::Color::Red);
+              }
               break;
           case State::CirclevsLine:
               text.setString("Circle vs Line Segment");
-              m_batch.draw_circle(m_mouse_position, 15.0f, 12, 1.0f, sf::Color::Red);
+
+
+              m_batch.draw_circle(m_mouse_position, circle.get_size().x, circle.get_sections(), circle.get_color());
+              m_batch.draw_line(static_line.get_points().from, static_line.get_points().to, 2, static_line.get_color());
+              if (detector.collision(circle, static_line)) {
+                  circle.set_color(sf::Color::Green);
+                  static_line.set_color(sf::Color::Green);
+              }
+              else {
+                  circle.set_color(sf::Color::Red);
+                  static_line.set_color(sf::Color::Red);
+              }
               break;
           case State::AABBvsAABB:
               text.setString("AABB vs AABB");
-              m_batch.draw_rectangle(rect, 1, rectColor);
+
+              aabb.set_rect(m_mouse_position, aabb.get_size()); //Have to do this here to update the rect
+
+
+              m_batch.draw_rectangle(aabb.get_rect(), aabb.get_color());
+              m_batch.draw_rectangle(static_aabb.get_rect(), static_aabb.get_color());
+              if (detector.collision(aabb, static_aabb)) {
+                  aabb.set_color(sf::Color::Green);
+                  static_aabb.set_color(sf::Color::Green);
+              }
+              else {
+                  aabb.set_color(sf::Color::Red);
+                  static_aabb.set_color(sf::Color::Red);
+              }
               break;
           default:
               break;
           }
 
-          m_window.draw(text); //Doesnt show up?
 
       }
       
       m_window.clear(sf::Color{ 0x44, 0x55, 0x66, 0xff });
+      m_window.draw(text);
       m_batch.present(m_window);
       m_window.display();
    }
@@ -132,19 +203,36 @@ namespace runner
        if (key == sf::Keyboard::Key::Num1) {
            //Circle vs circle
            state = State::CirclevsCircle;
+           static_circle.set_size(rand() % 100 + 20.0f, 0);
+           static_circle.set_position(sf::Vector2f(rand() % 1000 + static_circle.get_size().x, rand() % 1000 + static_circle.get_size().x));
+           circle.set_color(sf::Color::Red);
+           static_circle.set_color(sf::Color::Red);
        }
        else if (key == sf::Keyboard::Key::Num2) {
            //Circle vs Axis-aligned bounding box
            state = State::CirclevsAABB;
+           static_aabb.set_rect(sf::Vector2f(rand() % 1000 + static_aabb.get_size().x, rand() % 1000 + static_aabb.get_size().y), static_aabb.get_size());
+           static_aabb.set_size(rand() % 50 + 20.0f, 50);
+           circle.set_color(sf::Color::Red);
+           static_aabb.set_color(sf::Color::Red);
        }
        else if (key == sf::Keyboard::Key::Num3)
        {
            //Circle vs line segment
            state = State::CirclevsLine;
+           static_line.set_points(sf::Vector2f(rand() % 1000 + 1.0f, rand() % 1000 + 1.0f), sf::Vector2f(rand() % 1000 + 1.0f, rand() % 1000 + 1.0f));
+           circle.set_color(sf::Color::Red);
+           static_line.set_color(sf::Color::Red);
+
        }
        else if (key == sf::Keyboard::Key::Num4) {
            //Axis-aligned bounding box vs Axis-aligned bounding box
            state = State::AABBvsAABB;
+           static_aabb.set_rect(sf::Vector2f(rand() % 1000 + static_aabb.get_size().x, rand() % 1000 + static_aabb.get_size().y), static_aabb.get_size());
+           static_aabb.set_size(rand() % 50 + 20.0f, 50);
+           aabb.set_color(sf::Color::Red);
+           static_aabb.set_color(sf::Color::Red);
+
        }
 
    }
